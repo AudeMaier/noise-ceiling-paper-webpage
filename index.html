@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accuracy of Noise Ceiling Estimators for Brain Scores</title>
+<meta name="description" content="Paper page for &quot;Accuracy of Noise Ceiling Estimators for Brain Scores&quot; — Maier, Gruaz, Schrimpf &amp; Brea, EPFL. Presented at the Bernstein Conference.">
+<meta property="og:title" content="Accuracy of Noise Ceiling Estimators for Brain Scores">
+<meta property="og:description" content="Maier, Gruaz, Schrimpf &amp; Brea — Laboratory of Computational Neuroscience &amp; NeuroAI Lab, EPFL. Presented at the Bernstein Conference.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<style>
+  :root {
+    --bg: #F5F6F2;
+    --surface: #FFFFFF;
+    --ink: #1C2029;
+    --ink-soft: #565F6E;
+    --ink-faint: #8A8F99;
+    --line: #DDE1DF;
+    --accent: #3B4FD1;
+    --accent-soft: #E7E9FA;
+    --signal: #C9622B;
+    --pending-bg: #FBEFE4;
+    --pending-ink: #8A5326;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161C;
+      --surface: #1B1E27;
+      --ink: #EDEFF4;
+      --ink-soft: #A7AEBD;
+      --ink-faint: #6E7583;
+      --line: #2C303C;
+      --accent: #8C9AFF;
+      --accent-soft: #262B44;
+      --signal: #E58A54;
+      --pending-bg: #2E2415;
+      --pending-ink: #E0AE7C;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161C;
+    --surface: #1B1E27;
+    --ink: #EDEFF4;
+    --ink-soft: #A7AEBD;
+    --ink-faint: #6E7583;
+    --line: #2C303C;
+    --accent: #8C9AFF;
+    --accent-soft: #262B44;
+    --signal: #E58A54;
+    --pending-bg: #2E2415;
+    --pending-ink: #E0AE7C;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    padding-inline: 20px;
+    padding-block: 56px;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .eyebrow-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 5px 11px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    background: var(--surface);
+  }
+
+  .pill.venue { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+  .pill.status { color: var(--pending-ink); background: var(--pending-bg); border-color: transparent; }
+  .pill.status .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--pending-ink);
+  }
+
+  h1 {
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    font-weight: 600;
+    font-size: clamp(28px, 4.4vw, 38px);
+    line-height: 1.22;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 20px;
+  }
+
+  .authors {
+    font-size: 16.5px;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+
+  .affiliation {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .motif {
+    margin: 40px 0;
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .motif .grid-line { stroke: var(--line); stroke-width: 1; }
+  .motif .ceiling { stroke: var(--signal); stroke-width: 1.6; stroke-dasharray: 5 5; fill: none; }
+  .motif .curve { stroke: var(--accent); stroke-width: 2.2; fill: none; }
+  .motif .noise { fill: var(--ink-faint); opacity: 0.55; }
+  .motif .label { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10.5px; fill: var(--ink-faint); letter-spacing: 0.02em; }
+  .motif .label.ceiling-label { fill: var(--signal); }
+
+  section { margin: 40px 0; }
+
+  h2 {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .abstract p {
+    font-size: 16px;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .status-note {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    margin: 10px 0 0;
+  }
+
+  .resources {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+  }
+
+  .resource {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .resource .kind {
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    margin: 0 0 8px;
+  }
+
+  .resource .name {
+    font-size: 15px;
+    font-weight: 500;
+    margin: 0 0 10px;
+  }
+
+  .resource .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 100px;
+    background: var(--pending-bg);
+    color: var(--pending-ink);
+  }
+
+  .cite-box {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+  }
+
+  .cite-box pre {
+    margin: 0;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+    padding-right: 74px;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .cite-box pre { padding-right: 0; padding-bottom: 40px; }
+    .copy-btn { top: auto; bottom: 14px; right: 14px; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="page">
+
+  <div class="eyebrow-row">
+    <span class="pill venue">Bernstein Conference</span>
+    <span class="pill status"><span class="dot"></span>Manuscript in preparation</span>
+  </div>
+
+  <h1>Accuracy of Noise Ceiling Estimators for Brain Scores</h1>
+
+  <p class="authors">Aude Maier, Lucas Gruaz, Martin Schrimpf, Johanni Brea</p>
+  <p class="affiliation">Laboratory of Computational Neuroscience &amp; NeuroAI Lab, EPFL (École Polytechnique Fédérale de Lausanne), Switzerland</p>
+
+  <svg class="motif" viewBox="0 0 680 150" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Schematic of a brain score curve rising toward a noise ceiling, surrounded by noisy estimates">
+    <line class="grid-line" x1="0" y1="20" x2="680" y2="20"></line>
+    <line class="grid-line" x1="0" y1="130" x2="680" y2="130"></line>
+    <line class="ceiling" x1="0" y1="38" x2="680" y2="38"></line>
+    <text class="label ceiling-label" x="4" y="30">true noise ceiling</text>
+    <path class="curve" d="M 0 128 C 120 118, 200 78, 300 58 C 400 42, 480 40, 680 39"></path>
+    <text class="label" x="560" y="120">brain score(model)</text>
+    <g class="noise">
+      <circle cx="60" cy="112" r="3"></circle>
+      <circle cx="95" cy="95" r="3"></circle>
+      <circle cx="140" cy="100" r="3"></circle>
+      <circle cx="180" cy="72" r="3"></circle>
+      <circle cx="230" cy="80" r="3"></circle>
+      <circle cx="270" cy="55" r="3"></circle>
+      <circle cx="320" cy="62" r="3"></circle>
+      <circle cx="370" cy="45" r="3"></circle>
+      <circle cx="410" cy="52" r="3"></circle>
+      <circle cx="460" cy="34" r="3"></circle>
+      <circle cx="500" cy="46" r="3"></circle>
+      <circle cx="545" cy="30" r="3"></circle>
+      <circle cx="590" cy="42" r="3"></circle>
+      <circle cx="630" cy="33" r="3"></circle>
+    </g>
+  </svg>
+
+  <section class="abstract">
+    <h2>Abstract</h2>
+    <p>The internal activations of modern machine learning models align surprisingly well with the activities recorded in real brains. In the last five years, the alignment between encoding models and brain activities, often called brain scores, has steadily increased. Because brain recordings are noisy, there exists an upper bound to the brain scores that any model can achieve. This bound, called the noise ceiling, is crucial for two reasons: it determines whether further improvements in model performance are possible, and it enables meaningful comparisons of brain scores across benchmarks. The field has developed multiple approaches to estimate noise ceilings, but the statistical properties of existing estimators remain poorly understood, leaving it unclear in which experimental settings they provide reliable estimates. Here, we introduce a unified mathematical framework for brain recordings, use it to derive closed-form expressions for four commonly used noise ceiling estimators, and provide theoretical predictions for the behavior of each estimator. We validate the theoretical predictions with simulations that we compare to noise ceiling estimates in existing fMRI datasets. We find that the existing methods underestimate the true noise ceiling in different settings. We conclude with recommendations for best practice in different situations.</p>
+  </section>
+
+  <section>
+    <h2>Resources</h2>
+    <div class="resources">
+      <div class="resource">
+        <p class="kind">Manuscript</p>
+        <p class="name">Full paper (PDF)</p>
+        <span class="tag">Coming soon</span>
+      </div>
+      <div class="resource">
+        <p class="kind">Materials</p>
+        <p class="name">Code &amp; simulations</p>
+        <span class="tag">Coming soon</span>
+      </div>
+      <div class="resource">
+        <p class="kind">Conference</p>
+        <p class="name">Poster (PDF)</p>
+        <span class="tag">Coming soon</span>
+      </div>
+    </div>
+    <p class="status-note">This page will be updated with links as soon as the manuscript, code and poster are ready — the address and QR code above stay the same, so nothing on the printed poster needs to change.</p>
+  </section>
+
+  <section>
+    <h2>Cite this work</h2>
+    <div class="cite-box">
+      <pre id="bibtex">@unpublished{maier2026noiseceiling,
+  title  = {Accuracy of Noise Ceiling Estimators for Brain Scores},
+  author = {Maier, Aude and Gruaz, Lucas and Schrimpf, Martin and Brea, Johanni},
+  note   = {Poster presented at the Bernstein Conference},
+  year   = {2026}
+}</pre>
+      <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+    </div>
+  </section>
+
+  <footer>
+    <span>Laboratory of Computational Neuroscience &amp; NeuroAI Lab, EPFL</span>
+    <span>Page created September 2026</span>
+  </footer>
+
+</div>
+
+<script>
+  (function () {
+    var btn = document.getElementById('copyBtn');
+    var pre = document.getElementById('bibtex');
+    if (!btn || !pre) return;
+    btn.addEventListener('click', function () {
+      var text = pre.textContent;
+      function fallback() {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      function done() {
+        var original = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(function () { btn.textContent = original; }, 1500);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(); done(); });
+      } else {
+        fallback();
+        done();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
